@@ -26,7 +26,7 @@ buildscript {
     }
 }
 ```
-
+<br><br>
 To actually use the plugin, it must be applied and a TPA DSL must configure how
 the variants (flavors and build types) map to a TPA deployment. The example below
 configures two distinct flavors 'alka' and 'falck' with each their TPA uploadUUID.
@@ -56,8 +56,7 @@ tpa {
 }
 ```
 
-
-
+<br><br>
 ## Task examples
 The plugin will analyze the android and TPA configuration, and generate tasks
 accordingly. To see which tasks will be generated, execute a "gradle task".
@@ -80,8 +79,7 @@ tpaDeployFalckDevelop - Deploys falckDevelop variant
 tpaDeployFalckRelease - Deploys falckRelease variant
 ```
 
-
-
+<br><br>
 You can use the tpaCurrent (or any variant version of it) to learn about the current
 situation of TPA deployments. An example of running tpaCurrent:
 
@@ -114,8 +112,7 @@ Current deploy information for variant falckDevelop:
 No previous deployment of com.falck.fga.falck found on server tpa.trifork.com
 ```
 
-
-
+<br><br>
 To actually deploy a variant to TPA, you would use the specific tpaDeploy task.
 An example of deploying a new version of the flavor 'alka' and build type 'develop'
 would look like this:
@@ -143,8 +140,7 @@ OK
 BUILD SUCCESSFUL
 ```
 
-
-
+<br><br>
 Notice that the tpaDeployAlkaDevelop triggers the task assembleAlkaDevelop and 
 tpaCurrentAlkaDevelop to run first. This is done in order to avoid deploying an 
 artifact with the *same* versionNo as the currently deployed version on the TPA server 
@@ -168,8 +164,7 @@ VersionNo 103 of alkaDevelop variant already uploaded
 BUILD SUCCESSFUL
 ```
 
-
-
+<br><br>
 As you can see, the tpaDeployDevelop task is now completely skipped, since it would
 only fail anyway. Avoiding this failure scenario is paramount in a continuous integration 
 setup where you wouldn't want Jenkins to fail a job just because it's up-to-date.
