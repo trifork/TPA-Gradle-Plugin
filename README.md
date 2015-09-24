@@ -4,10 +4,11 @@
 This incubating plugin for Android projects aims at integrating with The Perfect App
 through a proper Gradle plugin, as an alternative to project-dependent scripting using
 Gradle, Groovy, Ant, Java and Bash. The plugin is still under development and you are 
-encouraged to contribute. 
+encouraged to contribute or report bugs.
 
 Initial contribution donated by clb@trifork.com under a
 permissive [MIT license](https://en.wikipedia.org/wiki/MIT_License).
+
 
 ## Configuration
 In order to use the plugin, all that's needed is inclusion of the dependency and the Maven
@@ -55,6 +56,8 @@ tpa {
 }
 ```
 
+
+
 ## Task examples
 The plugin will analyze the android and TPA configuration, and generate tasks
 accordingly. To see which tasks will be generated, execute a "gradle task".
@@ -77,13 +80,15 @@ tpaDeployFalckDevelop - Deploys falckDevelop variant
 tpaDeployFalckRelease - Deploys falckRelease variant
 ```
 
+
+
 You can use the tpaCurrent (or any variant version of it) to learn about the current
 situation of TPA deployments. An example of running tpaCurrent:
 
 ```
-:fga-app:tpaCurrentAlkaDebug
+:app:tpaCurrentAlkaDebug
 No previous deployment of com.falck.fga.alka.debug found on server tpa.trifork.com
-:fga-app:tpaCurrentAlkaDevelop
+:app:tpaCurrentAlkaDevelop
 Current deploy information for variant alkaDevelop:
 * Package name: com.falck.fga.alka.develop
 * Size: 3,1 MB
@@ -92,11 +97,11 @@ Current deploy information for variant alkaDevelop:
 * VersionNo: 102
 * VersionString: 0.1-51-DEVELOP
 * Release notes: 
-:fga-app:tpaCurrentAlkaRelease
+:app:tpaCurrentAlkaRelease
 No previous deployment of com.falck.fga.alka found on server tpa.trifork.com
-:fga-app:tpaCurrentFalckDebug
+:app:tpaCurrentFalckDebug
 No previous deployment of com.falck.fga.falck.debug found on server tpa.trifork.com
-:fga-app:tpaCurrentFalckDevelop
+:app:tpaCurrentFalckDevelop
 Current deploy information for variant falckDevelop:
 * Package name: com.falck.fga.falck.develop
 * Size: 3,1 MB
@@ -105,17 +110,19 @@ Current deploy information for variant falckDevelop:
 * VersionNo: 102
 * VersionString: 0.1-51-DEVELOP
 * Release notes: 
-:fga-app:tpaCurrentFalckRelease
+:app:tpaCurrentFalckRelease
 No previous deployment of com.falck.fga.falck found on server tpa.trifork.com
 ```
+
+
 
 To actually deploy a variant to TPA, you would use the specific tpaDeploy task.
 An example of deploying a new version of the flavor 'alka' and build type 'develop'
 would look like this:
 
 ```
-:fga-app:assembleAlkaDevelop
-:fga-app:tpaCurrentAlkaDevelop
+:app:assembleAlkaDevelop
+:app:tpaCurrentAlkaDevelop
 Current deploy information for variant alkaDevelop:
 * Package name: com.falck.fga.alka.develop
 * Size: 3,1 MB
@@ -124,10 +131,10 @@ Current deploy information for variant alkaDevelop:
 * VersionNo: 102
 * VersionString: 0.1-51-DEVELOP
 * Release notes: 
-:fga-app:tpaDeployAlkaDevelop
+:app:tpaDeployAlkaDevelop
 Uploading VersionNo 103 of alkaDevelop variant
 * Deploying alkaDevelop
-* APK: /Users/clb-trifork/Development/FGA-Android/fga-app/build/outputs/apk/fga-app-alka-develop.apk
+* APK: /Users/clb-trifork/Development/FGA-Android/app/build/outputs/apk/app-alka-develop.apk
 * Proguard: 
 * Publish: true
 * Uploading to: https://tpa.trifork.com/bff3750c-efeb-430b-b523-0781a6b700a3/upload
@@ -136,6 +143,8 @@ OK
 BUILD SUCCESSFUL
 ```
 
+
+
 Notice that the tpaDeployAlkaDevelop triggers the task assembleAlkaDevelop and 
 tpaCurrentAlkaDevelop to run first. This is done in order to avoid deploying an 
 artifact with the *same* versionNo as the currently deployed version on the TPA server 
@@ -143,7 +152,7 @@ artifact with the *same* versionNo as the currently deployed version on the TPA 
 tpaDeployAlkaDevelop again with no change in versionNo, the following would happen:
 
 ```
-:fga-app:tpaCurrentAlkaDevelop
+:app:tpaCurrentAlkaDevelop
 Current deploy information for variant alkaDevelop:
 * Package name: com.falck.fga.alka.develop
 * Size: 3,1 MB
@@ -152,26 +161,23 @@ Current deploy information for variant alkaDevelop:
 * VersionNo: 103
 * VersionString: 0.1-52-DEVELOP
 * Release notes: 
-:fga-app:tpaDeployAlkaDevelop
+:app:tpaDeployAlkaDevelop
 VersionNo 103 of alkaDevelop variant already uploaded
-:fga-app:tpaDeployAlkaDevelop SKIPPED
+:app:tpaDeployAlkaDevelop SKIPPED
 
 BUILD SUCCESSFUL
 ```
+
+
 
 As you can see, the tpaDeployDevelop task is now completely skipped, since it would
 only fail anyway. Avoiding this failure scenario is paramount in a continuous integration 
 setup where you wouldn't want Jenkins to fail a job just because it's up-to-date.
 
 
-##TODO: 
+##TODO:
 - Test non-flavor distribution
-- Handle TpaLib config?
-    tpa.crashreporting.uuid=991e998a-99f2-4c08-b086-c7ca3f934303
-    tpa.crashreporting.server_url=https://tpa.trifork.com
-    tpa.crashreporting.logging=both
-    tpa.crashreporting.updminutes=5
-    tpa.feedback.use_shake=true
+- Handle TpaLib config? (tpa.crashreporting.* properties)
 - Handle library format (AAR)
 - Test on a Windows box
 - Upload progress monitoring
