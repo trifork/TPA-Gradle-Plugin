@@ -25,6 +25,8 @@ buildscript {
         classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.60'
     }
 }
+
+
 ```
 
 
@@ -55,6 +57,8 @@ tpa {
         }
     }
 }
+
+
 ```
 
 
@@ -79,6 +83,8 @@ tpaDeployAlkaRelease - Deploys alkaRelease variant
 tpaDeployFalckDebug - Deploys falckDebug variant
 tpaDeployFalckDevelop - Deploys falckDevelop variant
 tpaDeployFalckRelease - Deploys falckRelease variant
+
+
 ```
 
 
@@ -112,6 +118,8 @@ Current deploy information for variant falckDevelop:
 * Release notes: 
 :app:tpaCurrentFalckRelease
 No previous deployment of com.falck.fga.falck found on server tpa.trifork.com
+
+
 ```
 
 
@@ -140,6 +148,8 @@ Uploading VersionNo 103 of alkaDevelop variant
 OK
 
 BUILD SUCCESSFUL
+
+
 ```
 
 Notice that the tpaDeployAlkaDevelop triggers the task assembleAlkaDevelop and 
@@ -163,6 +173,8 @@ VersionNo 103 of alkaDevelop variant already uploaded
 :app:tpaDeployAlkaDevelop SKIPPED
 
 BUILD SUCCESSFUL
+
+
 ```
 
 As you can see, the tpaDeployDevelop task is now completely skipped, since it would
