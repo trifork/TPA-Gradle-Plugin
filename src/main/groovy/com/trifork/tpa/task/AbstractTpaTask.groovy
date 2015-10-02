@@ -2,10 +2,10 @@ package com.trifork.tpa.task
 
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
-import java.text.DateFormat
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import com.trifork.tpa.TpaPlugin
+import java.text.DateFormat
 
 /*
  * Common base class for all TPA tasks 
@@ -38,8 +38,8 @@ abstract class AbstractTpaTask extends DefaultTask {
             uploadUUID = project.tpa.productFlavors[productFlavor].uploadUUID
             if(uploadUUID == null || uploadUUID.trim().isEmpty()){
                throw new GradleException("You need to specify 'tpa.productFlavors.${productFlavor}.uploadUUID'")
-            }                
-        }        
+            }
+        }
     }
     
     String toEntityString(def response){
@@ -61,7 +61,7 @@ abstract class AbstractTpaTask extends DefaultTask {
     public static String fromISO8601(final String iso8601string) {
         Calendar calendar = GregorianCalendar.getInstance()
         String s = iso8601string.substring(0, 19)
-        def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss", s)        
+        def date = Date.parse("yyyy-MM-dd'T'HH:mm:ss", s)
         DateFormat dateFormatter = DateFormat.getDateTimeInstance(
             DateFormat.MEDIUM, 
             DateFormat.SHORT, 
@@ -78,9 +78,8 @@ abstract class AbstractTpaTask extends DefaultTask {
         return String.format('%.1f %sB', bytes / Math.pow(unit, exp), \
             'KMGTPE'.charAt(exp-1))
     }    
-    
 
-    public String getApplicationId(def project){        
+    public String getApplicationId(def project){
         if(project.android.productFlavors.empty){
             def manifestFile = new File("${project.projectDir}/src/main/AndroidManifest.xml")
             if(manifestFile.exists()){
@@ -90,7 +89,7 @@ abstract class AbstractTpaTask extends DefaultTask {
             throw new GradleException("Unable to locate manifest file!")
         }else{
             project.android.productFlavors[productFlavor].applicationId
-        }        
+        }
     }
 }    
 

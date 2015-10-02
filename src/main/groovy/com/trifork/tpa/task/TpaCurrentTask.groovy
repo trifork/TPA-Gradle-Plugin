@@ -28,15 +28,15 @@ class TpaCurrentTask extends AbstractTpaTask {
 
         // Issue HTTP GET request
         URL url = new URL(uri);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setDoInput(true);
-        conn.setDoOutput(false);
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.setDoInput(true);
+        connection.setDoOutput(false);
 
         // Parse and act on HTTP response
-        switch(conn.getResponseCode()){
+        switch(connection.getResponseCode()){
             case HttpsURLConnection.HTTP_OK:
-                def currentList = new JsonSlurper().parse(conn.getInputStream())
+                def currentList = new JsonSlurper().parse(connection.getInputStream())
                 if(currentList.empty){
                     println "Project $packageName has no previous deployments on server $project.tpa.server"
                 }else{
@@ -47,8 +47,10 @@ class TpaCurrentTask extends AbstractTpaTask {
                 println "No project for $packageName found on server $project.tpa.server"
                 break;
             default:
-                throw new GradleException("${conn.getResponseCode()}")
+                throw new GradleException("${connection.getResponseCode()}")
         }
+        
+        connection.disconnect()
     }
     
     def prettyPrintTpaCurrentItem(def tpaCurrentItem, def packageName){
@@ -67,7 +69,6 @@ class TpaCurrentTask extends AbstractTpaTask {
         // which already exists)
         project.ext {
             previousTpaCurrentItem = tpaCurrentItem
-        }        
+        }
     }
-
 }

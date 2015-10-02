@@ -14,6 +14,11 @@ import org.gradle.api.*
  * To avoid class-loading issues, it's using a minimum of dependencies and only 
  * relies on the Apache httpmime (and the httpclient-android which is already in 
  * the build-chain classpath)
+ * 
+ * TODO: 
+ *      GZip being used to optimize upload?
+ *      Add progress for upload
+ *      Add commandline property override
  */
 class TpaPlugin implements Plugin<Project> {
     
@@ -32,7 +37,7 @@ task works in unison with Android, so please apply the 'com.android.application'
         project.configure(project){
             extensions.create("tpa", TpaExtension, tpaProductFlavors, tpaBuildTypes)
         }
-
+        
         installTasks(project, tpaProductFlavors, tpaBuildTypes)
     }
 
@@ -43,6 +48,14 @@ task works in unison with Android, so please apply the 'com.android.application'
         def tpaCurrentTaskAll = project.task('tpaCurrent',
                 description: 'Fetches info about current deploy of all variants',
                 group: GRADLE_PLUGIN_GROUP) << { /* No-Op */ }
+
+        // Sanity checking android.buildTypes vs. tpa.buildTypes
+        project.tpa.buildTypes.all{ buildType ->
+            if(!project.android.buildTypes.hasProperty(buildType.name)){
+                throw new GradleException("tpa.buildTypes.${buildType.name} is specified" +
+                    ", but no matching android.buildType.${buildType.name} found!")
+            }
+        }
 
         if(project.android.productFlavors.empty){
             project.android.buildTypes.all { buildType ->
@@ -89,10 +102,10 @@ task works in unison with Android, so please apply the 'com.android.application'
         project.task("tpaCurrent${capitalize(variantName)}",
                 description: "Fetches info about latest deploy of ${buildTypeName} variant",
                 group: GRADLE_PLUGIN_GROUP,
-                type: TpaCurrentTask) {            
+                type: TpaCurrentTask) {
             buildType = buildTypeName
             productFlavor = productFlavorName
-        }            
+        }
     }
 
     private Task installTpaDeployTask(Project project, String buildTypeName, 
@@ -123,7 +136,7 @@ task works in unison with Android, so please apply the 'com.android.application'
         } else {
             println "Uploading VersionCode ${versionCode} of ${variantName} variant"
         }
-        !skip        
+        !skip
     }
     
     public static String getVariantName(String buildTypeName, String productFlavorName = ''){
@@ -137,5 +150,4 @@ task works in unison with Android, so please apply the 'com.android.application'
     public static String capitalize(String string){
         return string[0].toUpperCase() + string[1..-1]
     }
-        
 }

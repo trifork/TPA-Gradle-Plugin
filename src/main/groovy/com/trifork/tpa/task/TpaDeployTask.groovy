@@ -17,18 +17,22 @@ import org.gradle.api.tasks.TaskAction
  * TpaDeployTask also depends on the TpaCurrentTask, such that there will be no attempt 
  * at deploying an artifact if the previously deployed versionNo is indifferent to 
  * that of the current project - this is essential in a CI/CD setup with Jenkins etc.
+ * 
  */
 class TpaDeployTask extends AbstractTpaTask {
 
+    private static final String CRLF = "\r\n"
+    private static final String DOUBLE_HYPHENS = "--"
+    private static final String MAGIC_BOUNDARY_SEPARATOR =  "**iPhoneSucksAndroidRocks**"
+    
     @TaskAction
     void executeRequest() {
         
         super.executeRequest()
         
         // Extract some variables from the TPA DSL
-        def proguardMappingFile = (project.android.buildTypes[buildType].minifyEnabled) ? 
-                new File("${project.buildDir}/outputs/mapping/${buildType}/mapping.txt") : null                
         def apkFile = getApkFile(project, buildType, productFlavor)
+        def proguardFile = getProguardFile(project, buildType, productFlavor)
         def uploadUrl = "https://${project.tpa.server}/${uploadUUID}/upload"
         
         // Determine publication setting for the artifact
@@ -43,108 +47,108 @@ class TpaDeployTask extends AbstractTpaTask {
         if( !apkFile.exists() ) {
             throw new GradleException("Failed to locate APK for upload $apkFile")
         }
-        if( proguardMappingFile != null && !proguardMappingFile.exists() ) {
-            throw new GradleException("Failed to locate ProguardMappingFile for upload proguardMappingFile")
+        if( proguardFile != null && !proguardFile.exists() ) {ß
+            throw new GradleException("Failed to locate ProguardMappingFile for upload: ${proguardFile}")
         }
         
         // Print deploy parameters to standard out
         println "* Deploying ${variantName}"
         println "* APK: ${apkFile}"
-        println "* Proguard: ${proguardMappingFile ?: ''}"
+        println "* Proguard: ${proguardFile ?: ''}"
         println "* Publish: ${publish}"
         println "* Uploading to: ${uploadUrl}"
         
-
-
-        String attachmentName = "apk"
-        String attachmentFileName = apkFile.getName()
-        String crlf = "\r\n"
-        String twoHyphens = "--"
-        String boundary =  "**TheIceIsMeltingOnThePoles*"
-        
-        HttpsURLConnection httpUrlConnection = null
+        // Issue HTTP POST request
         URL url = new URL(uploadUrl)
-        httpUrlConnection = (HttpsURLConnection) url.openConnection()
-        httpUrlConnection.setUseCaches(false)
-        httpUrlConnection.setDoOutput(true)
+        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection()
+        connection.setUseCaches(false)
+        connection.setDoOutput(true)
+        connection.setRequestMethod("POST")
+        connection.setRequestProperty("Connection", "Keep-Alive")
+        connection.setRequestProperty("Cache-Control", "no-cache")
+        connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" 
+            + MAGIC_BOUNDARY_SEPARATOR)
+        DataOutputStream requestStream = new DataOutputStream(connection.getOutputStream())
+        writeFormData(requestStream, "publish", publish)
+        writeFormData(requestStream, "apk", apkFile)
+        if(proguardFile != null){
+            writeFormData(requestStream, "mapping", proguardFile)
+        }
+        writeFormDataEnd(requestStream)
+        requestStream.flush()
+        requestStream.close()
 
-        httpUrlConnection.setRequestMethod("POST")
-        httpUrlConnection.setRequestProperty("Connection", "Keep-Alive")
-        httpUrlConnection.setRequestProperty("Cache-Control", "no-cache")
-        httpUrlConnection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary)
+        // Parse and act on HTTP response
+        switch(connection.getResponseCode()){
+            case HttpsURLConnection.HTTP_OK:
+                String responseBody = readBody(connection.getInputStream())
+                println "Server response: $responseBody"
+                break;
+            default:
+                String responseBody = readBody(connection.getInputStream())
+                println "Server response: $responseBody"
+                throw new GradleException("${connection.getResponseCode()}")
+        }
+        connection.disconnect()
+    }
 
-        DataOutputStream request = new DataOutputStream(httpUrlConnection.getOutputStream())
+    File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
+        def apkPath = "${project.buildDir}/outputs/apk"
+        if(productFlavorName.empty){
+            return new File("${apkPath}/${project.name}-${buildTypeName}.apk")
+        }
+        return new File("${apkPath}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+    }
+    
+    File getProguardFile(def project, String buildTypeName, String productFlavorName = ''){
+        if(project.android.buildTypes[buildTypeName].minifyEnabled){
+            def proguardPath = "${project.buildDir}/outputs/mapping"
+            if(productFlavorName.empty){
+                return new File("${proguardPath}/${buildTypeName}/mapping.txt")
+            }
+            else{
+                return new File("${proguardPath}/${productFlavorName}/${buildTypeName}/mapping.txt")
+            }
+        }
+        // TODO: Handle legacy version?!
         
-        // From a real request:
-        //------WebKitFormBoundaryxWlz4vEKV0iEKxiE
-        // Content-Disposition: form-data; name="apk"; filename="fga-app-falck-preview.apk"
-        //Content-Type: application/octet-stream
-        //
-        // <DATA>
-        //------WebKitFormBoundaryxWlz4vEKV0iEKxiE
-        // Content-Disposition: form-data; name="publish"
-        //false
-        // ------WebKitFormBoundaryxWlz4vEKV0iEKxiE--
+        return null
+    }
+    
+    def void writeFormData(DataOutputStream outStream, String name, boolean value){
+        outStream.writeBytes(DOUBLE_HYPHENS + MAGIC_BOUNDARY_SEPARATOR + CRLF)
+        outStream.writeBytes("Content-Disposition: form-data; name=\"${name}\"${CRLF}")
+        outStream.writeBytes(CRLF)
+        outStream.writeBytes("${String.valueOf(value)}${CRLF}")
+    }
+    
+    def void writeFormData(DataOutputStream outStream, String name, File file){
+        outStream.writeBytes(DOUBLE_HYPHENS + MAGIC_BOUNDARY_SEPARATOR + CRLF)
+        outStream.writeBytes("Content-Disposition: form-data; name=\"${name}\";filename=\"${file.getName()}\"${CRLF}")
+        outStream.writeBytes("Content-Type: application/octet-stream" + CRLF)
+        outStream.writeBytes(CRLF)
+        outStream.write(Files.readAllBytes(Paths.get(file.getAbsolutePath())));
+        outStream.writeBytes(CRLF);   
+    }
+    
+    def void writeFormDataEnd(DataOutputStream outStream){
+        outStream.writeBytes("$DOUBLE_HYPHENS$MAGIC_BOUNDARY_SEPARATOR$DOUBLE_HYPHENS$CRLF");
+    }
 
-        //println "Content-Disposition: form-data; name=\"${attachmentName}\";filename=\"${attachmentFileName}\""
+    private String readBody(InputStream inStream){
+        //InputStream responseStream = new BufferedInputStream(responseStream)
 
-        request.writeBytes(twoHyphens + boundary + crlf)
-        request.writeBytes("Content-Disposition: form-data; name=\"${attachmentName}\";filename=\"${attachmentFileName}\"${crlf}")
-        request.writeBytes("Content-Type: application/octet-stream" + crlf)
-        request.writeBytes(crlf)
-        request.write(Files.readAllBytes(Paths.get(apkFile.getAbsolutePath())));
-        request.writeBytes(crlf);
-        request.writeBytes("$twoHyphens$boundary$twoHyphens$crlf");
-
-        request.flush()
-        request.close()
-
-        InputStream responseStream = new BufferedInputStream(httpUrlConnection.getInputStream())
-
-        BufferedReader responseStreamReader = new BufferedReader(new InputStreamReader(responseStream))
+        BufferedReader inStreamReader = new BufferedReader(new InputStreamReader(inStream))
         String line = ""
         StringBuilder stringBuilder = new StringBuilder()
-        while ((line = responseStreamReader.readLine()) != null)
+        while ((line = inStreamReader.readLine()) != null)
         {
             stringBuilder.append(line).append("\n")
         }
-        responseStreamReader.close()
-
-        String response = stringBuilder.toString()
-
-        responseStream.close()
+        inStreamReader.close()
+        inStream.close()
         
-        httpUrlConnection.disconnect()
-        
-        /*
-        // Construct and execute HTTP POST request
-        MultipartEntityBuilder entityBuilder = MultipartEntityBuilder.create()
-        entityBuilder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE)
-        entityBuilder.addBinaryBody("apk", apkFile)
-        if(proguardMappingFile != null){
-            entityBuilder.addBinaryBody("mapping", proguardMappingFile)
-        }
-        entityBuilder.addTextBody("publish", String.valueOf(publish)) 
-        HttpEntity entity = entityBuilder.build()
-        HttpPost post = new HttpPost(uploadUrl)        
-        post.setEntity(entity)
-        
-        HttpResponse response = new DefaultHttpClient().execute(post)
-        
-        // Parse and act on HTTP response
-        String entityString = toEntityString(response)
-        if(response.getStatusLine().getStatusCode() == 200){
-            println entityString
-        }else{
-            throw new GradleException(entityString)            
-        }*/
-    }
-    
-    def File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
-        if(productFlavorName.empty){
-            return new File("${project.buildDir}/outputs/apk/${project.name}-${buildTypeName}.apk")
-        }
-        return new File("${project.buildDir}/outputs/apk/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+        return stringBuilder.toString()
     }
     
     /*
