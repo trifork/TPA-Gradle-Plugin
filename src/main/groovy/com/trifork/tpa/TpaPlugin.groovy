@@ -19,10 +19,6 @@ class TpaPlugin implements Plugin<Project> {
     
     static String GRADLE_PLUGIN_GROUP = 'The Perfect App'
 
-    static def capitalize(String string){
-        return string.toLowerCase().tokenize().collect { it.capitalize() }.join(' ')
-    }
-    
     def void apply(Project project) {
 
         if(!project.plugins.hasPlugin('android')){
@@ -37,64 +33,109 @@ task works in unison with Android, so please apply the 'com.android.application'
             extensions.create("tpa", TpaExtension, tpaProductFlavors, tpaBuildTypes)
         }
 
-        installTasks(project, tpaProductFlavors)
+        installTasks(project, tpaProductFlavors, tpaBuildTypes)
     }
 
-    private void installTasks(Project project, NamedDomainObjectContainer<TpaProductFlavor> tpaProductFlavors) {
+    private void installTasks(Project project,
+        NamedDomainObjectContainer<TpaProductFlavor> tpaProductFlavors,
+        NamedDomainObjectContainer<TpaBuildType> tpaBuildTypes) {
 
         def tpaCurrentTaskAll = project.task('tpaCurrent',
                 description: 'Fetches info about current deploy of all variants',
                 group: GRADLE_PLUGIN_GROUP) << { /* No-Op */ }
 
-        tpaProductFlavors.all { tpaProductFlavor ->
-            project.android.productFlavors.all { productFlavor ->
-                if (productFlavor.name.equals(tpaProductFlavor.name)) {
-                    project.android.buildTypes.all { buildType ->
-                        def tpaCurrentTask = installTpaCurrentTask(project, productFlavor.name, buildType.name)
-                        def tpaDeployTask = installTpaDeployTask(project, productFlavor.name, buildType.name)
+        if(project.android.productFlavors.empty){
+            project.android.buildTypes.all { buildType ->
+        
+                def tpaCurrentTask = installTpaCurrentTask(project, buildType.name)
+                def tpaDeployTask = installTpaDeployTask(project, buildType.name)
 
-                        // Make sure tpaDeployTask's are only executed if it would result in a new versionNo
-                        tpaDeployTask.onlyIf {
-                            def skip = project.hasProperty('previousTpaCurrentItem') && project.previousTpaCurrentItem.version_number.toInteger() == project.android.defaultConfig.versionCode.toInteger()
+                tpaDeployTask.onlyIf {
+                    deployingNewVersionNo(project, getVariantName(buildType.name))
+                }
 
-                            if (skip) {
-                                println "VersionNo ${project.android.defaultConfig.versionCode} of ${productFlavor.name}${capitalize(buildType.name)} variant already uploaded"
-                            } else {
-                                println "Uploading VersionNo ${project.android.defaultConfig.versionCode} of ${productFlavor.name}${capitalize(buildType.name)} variant"
+                // The TpaCurrent command must contains *all* possible TpaCurrentTask variants
+                tpaCurrentTaskAll.dependsOn << tpaCurrentTask
+            }
+        }else{
+            
+            tpaProductFlavors.all { tpaProductFlavor ->
+                project.android.productFlavors.all { productFlavor ->
+                    if (productFlavor.name.equals(tpaProductFlavor.name)) {
+                        project.android.buildTypes.all { buildType ->
+                            def variantName = getVariantName(buildType.name, productFlavor.name)
+                            def tpaCurrentTask = installTpaCurrentTask(project, buildType.name, productFlavor.name)
+                            def tpaDeployTask = installTpaDeployTask(project, buildType.name, productFlavor.name)
+
+                            // Make sure tpaDeployTask's are only executed if it would result in a new versionNo
+                            tpaDeployTask.onlyIf {
+                                deployingNewVersionNo(project, variantName)
                             }
-                            !skip
-                        }
 
-                        // The TpaCurrent command must contains *all* possible TpaCurrentTask variants
-                        tpaCurrentTaskAll.dependsOn << tpaCurrentTask
+                            // The TpaCurrent command must contains *all* possible TpaCurrentTask variants
+                            tpaCurrentTaskAll.dependsOn << tpaCurrentTask
+                        }
                     }
                 }
             }
         }
     }
     
-    // Creates a TpaCurrent variant task
-    private Task installTpaCurrentTask(Project project, String productFlavorName, String buildTypeName){
-        project.task("tpaCurrent${capitalize(productFlavorName)}${capitalize(buildTypeName)}",
-                description: "Fetches info about latest deploy of ${productFlavorName}${capitalize(buildTypeName)} variant",
+    private Task installTpaCurrentTask(Project project, String buildTypeName, 
+            String productFlavorName = ''){
+
+        def variantName = getVariantName(buildTypeName, productFlavorName)
+        
+        project.task("tpaCurrent${capitalize(variantName)}",
+                description: "Fetches info about latest deploy of ${buildTypeName} variant",
                 group: GRADLE_PLUGIN_GROUP,
-                type: TpaCurrentTask) {
-            productFlavor = productFlavorName
+                type: TpaCurrentTask) {            
             buildType = buildTypeName
-        }
+            productFlavor = productFlavorName
+        }            
     }
 
-    // Creates a tpaDeploy variant task
-    private Task installTpaDeployTask(Project project, String productFlavorName, String buildTypeName){   
-        project.task("tpaDeploy${capitalize(productFlavorName)}${capitalize(buildTypeName)}",
-                description: "Deploys ${productFlavorName}${capitalize(buildTypeName)} variant",
+    private Task installTpaDeployTask(Project project, String buildTypeName, 
+            String productFlavorName = ''){
+        
+        def variantName = getVariantName(buildTypeName, productFlavorName)
+        def capitalizedVariantName = capitalize(variantName)
+        
+        project.task("tpaDeploy${capitalizedVariantName}",
+                description: "Deploys ${variantName} variant",
                 group: GRADLE_PLUGIN_GROUP,
                 type: TpaDeployTask,
                 dependsOn: [\
-                        "assemble${capitalize(productFlavorName)}${capitalize(buildTypeName)}", \
-                        "tpaCurrent${capitalize(productFlavorName)}${capitalize(buildTypeName)}"]) {
-            productFlavor = productFlavorName
+                        "assemble${capitalizedVariantName}", \
+                        "tpaCurrent${capitalizedVariantName}"]) {
             buildType = buildTypeName
+            productFlavor = productFlavorName
         }
     }
+
+    private boolean deployingNewVersionNo(def project, String variantName){
+        def versionCode = project.android.defaultConfig.versionCode.toInteger()
+        def skip = project.hasProperty('previousTpaCurrentItem') && 
+                project.previousTpaCurrentItem.version_number.toInteger() == versionCode
+
+        if (skip) {
+            println "VersionCode ${versionCode} of ${variantName} variant already uploaded"
+        } else {
+            println "Uploading VersionCode ${versionCode} of ${variantName} variant"
+        }
+        !skip        
+    }
+    
+    public static String getVariantName(String buildTypeName, String productFlavorName = ''){
+        if(productFlavorName.empty){
+            return buildTypeName
+        }else{
+            return productFlavorName + capitalize(buildTypeName)
+        }
+    }
+
+    public static String capitalize(String string){
+        return string[0].toUpperCase() + string[1..-1]
+    }
+        
 }

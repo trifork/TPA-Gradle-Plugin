@@ -30,15 +30,15 @@ class TpaDeployTask extends AbstractTpaTask {
         
         // Extract some variables from the TPA DSL
         def proguardMappingFile = (project.android.buildTypes[buildType].minifyEnabled) ? 
-                new File("${project.buildDir}/outputs/mapping/${buildType}/mapping.txt") : null
-        def apkFile = new File("${project.buildDir}/outputs/apk/${project.name}-${productFlavor}-${buildType}.apk")
+                new File("${project.buildDir}/outputs/mapping/${buildType}/mapping.txt") : null                
+        def apkFile = getApkFile(project, buildType, productFlavor)
         def uploadUrl = "https://${project.tpa.server}/${uploadUUID}/upload"
         
         // Determine publication setting for the artifact
-        def publish = project.tpa.defaultPublish
+        def publish = project.tpa.publish
         if(project.tpa.buildTypes.findByName(buildType)){
             if(project.tpa.buildTypes[buildType].hasProperty('publish')){
-                publish = project.tpa.buildTypes[buildType].publish    
+                publish = project.tpa.buildTypes[buildType].publish
             }
         }
         
@@ -51,7 +51,7 @@ class TpaDeployTask extends AbstractTpaTask {
         }
         
         // Print deploy parameters to standard out
-        println "* Deploying ${productFlavor}${TpaPlugin.capitalize(buildType)}"
+        println "* Deploying ${variantName}"
         println "* APK: ${apkFile}"
         println "* Proguard: ${proguardMappingFile ?: ''}"
         println "* Publish: ${publish}"
@@ -78,6 +78,13 @@ class TpaDeployTask extends AbstractTpaTask {
         }else{
             throw new GradleException(entityString)            
         }
+    }
+    
+    def File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
+        if(productFlavorName.empty){
+            return new File("${project.buildDir}/outputs/apk/${project.name}-${buildTypeName}.apk")
+        }
+        return new File("${project.buildDir}/outputs/apk/${project.name}-${productFlavorName}-${buildTypeName}.apk")
     }
     
     /*

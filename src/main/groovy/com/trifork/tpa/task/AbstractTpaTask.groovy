@@ -5,6 +5,7 @@ import org.gradle.api.tasks.TaskAction
 import java.text.DateFormat
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import com.trifork.tpa.TpaPlugin
 
 /*
  * Common base class for all TPA tasks 
@@ -17,18 +18,28 @@ abstract class AbstractTpaTask extends DefaultTask {
 
     String uploadUUID
     
+    String variantName
+    
     @TaskAction
     void executeRequest() {
+
+        variantName = TpaPlugin.getVariantName(buildType, productFlavor)
         
         if(project.tpa.server == null || project.tpa.server.trim().isEmpty()){
            throw new GradleException("You need to specify 'tpa.server'")
         }
 
-        uploadUUID = project.tpa.productFlavors[productFlavor].uploadUUID
-
-        if(uploadUUID == null || uploadUUID.trim().isEmpty()){
-           throw new GradleException("You need to specify 'tpa.productFlavors.${productFlavor}.uploadUUID'")
-        }    
+        if(project.tpa.productFlavors == null || project.tpa.productFlavors.empty){
+            uploadUUID = project.tpa.uploadUUID
+            if(uploadUUID == null || uploadUUID.trim().isEmpty()){
+               throw new GradleException("You need to specify 'tpa.uploadUUID'")
+            }    
+        }else{
+            uploadUUID = project.tpa.productFlavors[productFlavor].uploadUUID
+            if(uploadUUID == null || uploadUUID.trim().isEmpty()){
+               throw new GradleException("You need to specify 'tpa.productFlavors.${productFlavor}.uploadUUID'")
+            }                
+        }        
     }
     
     String toEntityString(def response){
@@ -68,5 +79,18 @@ abstract class AbstractTpaTask extends DefaultTask {
             'KMGTPE'.charAt(exp-1))
     }    
     
+
+    public String getApplicationId(def project){        
+        if(project.android.productFlavors.empty){
+            def manifestFile = new File("${project.projectDir}/src/main/AndroidManifest.xml")
+            if(manifestFile.exists()){
+                def manifest = new XmlSlurper().parse(manifestFile)
+                return manifest.@'package'
+            }
+            throw new GradleException("Unable to locate manifest file!")
+        }else{
+            project.android.productFlavors[productFlavor].applicationId
+        }        
+    }
 }    
 

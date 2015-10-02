@@ -3,10 +3,11 @@ package com.trifork.tpa.dsl
 import org.gradle.api.NamedDomainObjectContainer
 
 class TpaExtension{
-    final NamedDomainObjectContainer<TpaProductFlavor> productFlavors
-    final NamedDomainObjectContainer<TpaBuildType> buildTypes
+    NamedDomainObjectContainer<TpaProductFlavor> productFlavors
+    NamedDomainObjectContainer<TpaBuildType> buildTypes
     String server = ''
-    boolean defaultPublish = true
+    boolean publish = false
+    String uploadUUID = ''
 
     TpaExtension(productFlavors, buildTypes){
         this.productFlavors = productFlavors
@@ -25,7 +26,11 @@ class TpaExtension{
         this.server.configure(closure)
     }
 
-    def defaultPublish(Closure closure){
-        this.defaultPublish.configure(closure)
+    def publish(Closure closure){
+        this.publish.configure(closure)
+    }
+
+    def uploadUUID(Closure closure){
+        this.uploadUUID.configure(closure)
     }
 }
