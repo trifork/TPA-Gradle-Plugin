@@ -145,7 +145,7 @@ There are two types of tasks installed by the TPA plugin, namely tpaInfo tasks a
 
 ##Info tasks
 
-You can use the tpaInfo (or any variant version of it) to learn about the current situation of TPA deployments. An example of running a current task for the 'release' build:
+You can use a tpaInfo variant task to learn about the current situation of TPA deployments. An example of running a current task for the 'release' build:
 
 ```
 ~/$ gradle tpaInfoRelease
@@ -162,7 +162,7 @@ BUILD SUCCESSFUL
 
 ```
 
-The TPA server receives a request to return information about the track name 'com'pepsico.pepsi.game' for the project specified by the assiciated uploadUUID. It responds with key properties useful in a debugging scenario or while preparing for a deployment. 
+The TPA server receives a request to return information about the track name 'com.pepsico.pepsi.game' for the project specified by the assiciated uploadUUID. It responds with key properties useful in a debugging scenario or while preparing for a deployment. 
 
 ##Deploy tasks
 
