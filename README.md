@@ -143,7 +143,7 @@ tpaDeployRelease - Deploys release variant
 
 There are two types of tasks installed by the TPA plugin, namely tpaInfo tasks and tpaDeploy tasks. These are explained separately below.
 
-##Current tasks
+##Info tasks
 
 You can use the tpaInfo (or any variant version of it) to learn about the current situation of TPA deployments. An example of running a current task for the 'release' build:
 
