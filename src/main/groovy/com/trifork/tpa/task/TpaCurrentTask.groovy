@@ -22,9 +22,9 @@ class TpaCurrentTask extends AbstractTpaTask {
 
         // Extract some variables from the TPA DSL and manfest
         String applicationId = getApplicationId(project)
-        String applicationIdSuffix = project.android.buildTypes[buildType].applicationIdSuffix ?: ''
-        String packageName = "$applicationId$applicationIdSuffix"
-        String uri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/Android/${packageName}/?unpublished=true&published=true&max_results=1"
+        String applicationIdSuffix = project.android.buildTypes[buildType].applicationIdSuffix ?: ''        
+        applicationId = "$applicationId$applicationIdSuffix"
+        String uri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/Android/${applicationId}/?unpublished=true&published=true&max_results=1"
 
         // Issue HTTP GET request
         URL url = new URL(uri);
@@ -38,14 +38,13 @@ class TpaCurrentTask extends AbstractTpaTask {
             case HttpsURLConnection.HTTP_OK:
                 def currentList = new JsonSlurper().parse(connection.getInputStream())
                 if(currentList.empty){
-                    println "Project $packageName has no previous deployments on server $project.tpa.server"
+                    println "Track '${applicationId}' has no previous deployments on server $project.tpa.server"
                 }else{
-                    prettyPrintTpaCurrentItem(currentList.get(0), packageName)
+                    prettyPrintTpaCurrentItem(currentList.get(0), applicationId)
                 }
                 break;
             case HttpsURLConnection.HTTP_NOT_FOUND:
-                println "No project for $packageName found on server $project.tpa.server"
-                break;
+                throw new GradleException("No track for '${applicationId}' found on server! Did you forget to add this?")
             default:
                 throw new GradleException("${connection.getResponseCode()}")
         }
@@ -53,16 +52,17 @@ class TpaCurrentTask extends AbstractTpaTask {
         connection.disconnect()
     }
     
-    def prettyPrintTpaCurrentItem(def tpaCurrentItem, def packageName){
-        
-        println "Current deploy information for variant ${variantName}:"
-        println "* Package name: ${packageName}\n" +
+    def prettyPrintTpaCurrentItem(def tpaCurrentItem, def applicationId){
+        println "Current deploy information for variant '${variantName}':\n" +
+            "* Track name/applicationId: ${applicationId}\n" +
             "* Size: ${humanReadableByteCount(tpaCurrentItem.app_size)}\n" +
             "* Published: $tpaCurrentItem.published\n" +
             "* Uploaded on: ${fromISO8601(tpaCurrentItem.uploaded)}\n" +
-            "* VersionNo: $tpaCurrentItem.version_number\n" +
-            "* VersionString: $tpaCurrentItem.version_string\n" +
-            "* Release notes: $tpaCurrentItem.release_notes"
+            "* Version code: $tpaCurrentItem.version_number\n" +
+            "* Version name: $tpaCurrentItem.version_string\n"
+        if(!tpaCurrentItem.release_notes.empty){
+            println "* Release notes: $tpaCurrentItem.release_notes"
+        }
 
         // Store the TpaCurrentItem in the project so the later TpaDeployTask can
         // determine if can be skipped or not (avoid deploying versionNo

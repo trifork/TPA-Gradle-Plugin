@@ -4,6 +4,7 @@ import com.trifork.tpa.TpaPlugin
 import javax.net.ssl.HttpsURLConnection
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.zip.GZIPOutputStream
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
 
@@ -45,53 +46,81 @@ class TpaDeployTask extends AbstractTpaTask {
         
         // Do a bit of sanity checking
         if( !apkFile.exists() ) {
-            throw new GradleException("Failed to locate APK for upload $apkFile")
+            throw new GradleException("Failed to locate APK for upload: '${apkFile.getName()}'")
         }
-        if( proguardFile != null && !proguardFile.exists() ) {ß
-            throw new GradleException("Failed to locate ProguardMappingFile for upload: ${proguardFile}")
+        if( proguardFile != null && !proguardFile.exists() ) {
+            throw new GradleException("Failed to locate ProguardMappingFile for upload: '${proguardFile.getName()}'")
         }
         
-        // Print deploy parameters to standard out
-        println "* Deploying ${variantName}"
-        println "* APK: ${apkFile}"
-        println "* Proguard: ${proguardFile ?: ''}"
-        println "* Publish: ${publish}"
-        println "* Uploading to: ${uploadUrl}"
+        prettyPrintDeployInfo(apkFile, proguardFile, publish)
         
         // Issue HTTP POST request
-        URL url = new URL(uploadUrl)
-        HttpsURLConnection connection = (HttpsURLConnection) url.openConnection()
-        connection.setUseCaches(false)
-        connection.setDoOutput(true)
-        connection.setRequestMethod("POST")
-        connection.setRequestProperty("Connection", "Keep-Alive")
-        connection.setRequestProperty("Cache-Control", "no-cache")
-        connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" 
-            + MAGIC_BOUNDARY_SEPARATOR)
-        DataOutputStream requestStream = new DataOutputStream(connection.getOutputStream())
-        writeFormData(requestStream, "publish", publish)
-        writeFormData(requestStream, "apk", apkFile)
-        if(proguardFile != null){
-            writeFormData(requestStream, "mapping", proguardFile)
-        }
-        writeFormDataEnd(requestStream)
-        requestStream.flush()
-        requestStream.close()
+        HttpsURLConnection connection;
+        try{
+            URL url = new URL(uploadUrl)
+            connection = (HttpsURLConnection) url.openConnection()
+            connection.setUseCaches(false)
+            connection.setDoOutput(true)
+            connection.setRequestMethod("POST")
+            connection.setRequestProperty("Connection", "Keep-Alive")
+            connection.setRequestProperty("Cache-Control", "no-cache")
+            //connection.setRequestProperty("Content-Encoding", "gzip")
+            connection.setRequestProperty("Content-Type", "multipart/form-data;boundary=" 
+                + MAGIC_BOUNDARY_SEPARATOR)
+            DataOutputStream requestStream = new DataOutputStream(connection.getOutputStream())
+            //DataOutputStream requestStream = new DataOutputStream(new BufferedOutputStream(new GZIPOutputStream(connection.getOutputStream())))
+            writeFormData(requestStream, "publish", publish)
+            writeFormData(requestStream, "apk", apkFile)
+            if(proguardFile != null){
+                writeFormData(requestStream, "mapping", proguardFile)
+            }
+            writeFormDataEnd(requestStream)
+            requestStream.flush()
+            requestStream.close()
 
-        // Parse and act on HTTP response
-        switch(connection.getResponseCode()){
-            case HttpsURLConnection.HTTP_OK:
-                String responseBody = readBody(connection.getInputStream())
-                println "Server response: $responseBody"
-                break;
-            default:
+            // Parse and act on HTTP response
+            if(connection.getResponseCode() == HttpsURLConnection.HTTP_OK){
+                    String responseBody = readBody(connection.getInputStream())
+                    println "Server response: $responseBody"
+            }else{
+                throw GradleException("Server error: ${connection.getResponseCode()}")
+            }
+        }catch(Throwable t){
+            if(connection.getResponseCode() == HttpsURLConnection.HTTP_FORBIDDEN){
+                // This should never happen, as the tpaCurrent task fails first!
+                try{
+                    String responseBody = readBody(connection.getInputStream())
+                    println "Server response: $responseBody"                        
+                }catch(IOException e){
+                    println "No track name matching '${applicationId}' found on the server! Did you forget to add this?"
+                }
+            }
+            else{
                 String responseBody = readBody(connection.getInputStream())
                 println "Server response: $responseBody"
                 throw new GradleException("${connection.getResponseCode()}")
+            }
+        }finally{
+            connection.disconnect()    
         }
-        connection.disconnect()
     }
 
+    def prettyPrintDeployInfo(File apkFile, File proguardFile, boolean publish){
+        println "Deploying: \n" +
+            "* Build variant: ${variantName}\n" +
+            "* Track name/applicationId: ${applicationId}\n" +
+            "* Version name: ${versionName}\n" +
+            "* Version code: ${versionCode}\n" +
+            "* APK file name: ${apkFile.getName()}\n" +
+            "* APK file size: ${humanReadableByteCount(apkFile.length())}"
+        if(proguardFile){
+            println "* Proguard file name: ${proguardFile.getName()}"
+        }
+        println "* Publish flag: ${publish}\n" +
+            "* Upload UUID: ${uploadUUID}\n" +
+            "* Target server: ${project.tpa.server}"
+    }
+    
     File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
         def apkPath = "${project.buildDir}/outputs/apk"
         if(productFlavorName.empty){

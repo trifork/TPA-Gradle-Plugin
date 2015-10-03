@@ -19,11 +19,22 @@ abstract class AbstractTpaTask extends DefaultTask {
     String uploadUUID
     
     String variantName
+
+    Integer versionCode
+
+    String versionName
+    
+    String applicationId
     
     @TaskAction
     void executeRequest() {
 
         variantName = TpaPlugin.getVariantName(buildType, productFlavor)
+        
+        // Bug lurking: versionCodes could be defined locally per build/flavor?
+        versionCode = project.android.defaultConfig.versionCode.toInteger()
+        versionName = project.android.defaultConfig.versionName
+        applicationId = getApplicationId(project)
         
         if(project.tpa.server == null || project.tpa.server.trim().isEmpty()){
            throw new GradleException("You need to specify 'tpa.server'")
@@ -81,14 +92,18 @@ abstract class AbstractTpaTask extends DefaultTask {
 
     public String getApplicationId(def project){
         if(project.android.productFlavors.empty){
-            def manifestFile = new File("${project.projectDir}/src/main/AndroidManifest.xml")
-            if(manifestFile.exists()){
-                def manifest = new XmlSlurper().parse(manifestFile)
-                return manifest.@'package'
+            
+            if(project.android.defaultConfig.applicationId == null){
+                def manifestFile = new File("${project.projectDir}/src/main/AndroidManifest.xml")
+                if(manifestFile.exists()){
+                    def manifest = new XmlSlurper().parse(manifestFile)
+                    return manifest.@'package'
+                }
+                throw new GradleException("Unable to determine applicationId or locate manifest file!")
             }
-            throw new GradleException("Unable to locate manifest file!")
+            return project.android.defaultConfig.applicationId
         }else{
-            project.android.productFlavors[productFlavor].applicationId
+            return project.android.productFlavors[productFlavor].applicationId
         }
     }
 }    

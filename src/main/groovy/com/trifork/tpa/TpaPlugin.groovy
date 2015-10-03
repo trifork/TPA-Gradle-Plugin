@@ -16,7 +16,8 @@ import org.gradle.api.*
  * the build-chain classpath)
  * 
  * TODO: 
- *      GZip being used to optimize upload?
+ *      Legacy minify support
+ *      GZip being used to optimize upload? Nope, server probably incapable!
  *      Add progress for upload
  *      Add commandline property override
  */
@@ -127,14 +128,13 @@ task works in unison with Android, so please apply the 'com.android.application'
     }
 
     private boolean deployingNewVersionNo(def project, String variantName){
+        // Bug lurking: versionCodes could be defined locally per build/flavor?
         def versionCode = project.android.defaultConfig.versionCode.toInteger()
         def skip = project.hasProperty('previousTpaCurrentItem') && 
                 project.previousTpaCurrentItem.version_number.toInteger() == versionCode
 
         if (skip) {
             println "VersionCode ${versionCode} of ${variantName} variant already uploaded"
-        } else {
-            println "Uploading VersionCode ${versionCode} of ${variantName} variant"
         }
         !skip
     }
