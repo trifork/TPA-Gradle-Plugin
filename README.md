@@ -24,7 +24,7 @@ buildscript {
 
 ```
 
-Note: Always try to use the latest version published by checking the [Maven reposatory](http://nexus.ci82.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/). Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle. Also note, this should really be pushed to a public Maven repo like [jcenter](https://bintray.com/bintray/jcenter) or [central](http://search.maven.org/).
+Always try to use the latest version published by checking the [Maven reposatory](http://nexus.ci82.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle. Last but not least, the plugin should really be pushed to a public Maven repo like [jcenter](https://bintray.com/bintray/jcenter) or [central](http://search.maven.org/).
 
 ##Simple non-flavor configuration
 
