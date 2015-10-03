@@ -24,7 +24,7 @@ buildscript {
 
 ```
 
-Note: Always try to use the latest version published by checking the [Maven reposatory](http://nexus.ci82.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/). Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle.
+Note: Always try to use the latest version published by checking the [Maven reposatory](http://nexus.ci82.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/). Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle. Also note, this should really be pushed to a public Maven repo like [jcenter](https://bintray.com/bintray/jcenter) or [central](http://search.maven.org/).
 
 ##Simple non-flavor configuration
 
@@ -42,7 +42,7 @@ tpa {
 
 The server is the TPA instance you are targeting and the uploadUUID is the unique upload ID generated and exposed by the TPA user interface when you create your project.
 
-By default, the plugin will *not* publish the artefact once deployed to TPA. That is, it will have to be published manually by using the user-interface of the TPA server application. You can override this behavior using the TPA DSL:
+By default, the plugin will *not* publish the artifact once deployed to TPA. That is, it will have to be published manually by using the user-interface of the TPA server application. You can override this behavior using the TPA DSL:
 
 ```
 apply plugin: 'tpa'
@@ -74,7 +74,7 @@ With the above configuration, all build types ('debug' and 'release') will remai
 
 ##Complex flavor configuration
 
-Just as was the case with build types, the TPA DSL supports a flavor type extension mechanism. This means that you may also use the plugin on multi flavored projects and configure it much as you would expect from having used the Android DSL:
+Just as was the case with build types, the TPA DSL supports a product flavor extension mechanism. This means that you may also use the plugin on multi flavored projects and configure it much as you would expect from having used the Android DSL:
 
 ```
 apply plugin: 'tpa'
@@ -134,23 +134,22 @@ Once installed and configured, the plugin will take part of the Gradle build-cha
 ```
 The Perfect App tasks
 ---------------------
-tpaCurrent - Fetches info about current deploy of all variants
-tpaCurrentDebug - Fetches info about latest deploy of debug variant
-tpaCurrentRelease - Fetches info about latest deploy of release variant
+tpaInfoDebug - Fetches info about latest deploy of debug variant
+tpaInfoRelease - Fetches info about latest deploy of release variant
 tpaDeployDebug - Deploys debug variant
 tpaDeployRelease - Deploys release variant
 
 ```
 
-There are two types of tasks installed by the TPA plugin, namely tpaCurrent tasks and tpaDeploy tasks. These are explained separately below.
+There are two types of tasks installed by the TPA plugin, namely tpaInfo tasks and tpaDeploy tasks. These are explained separately below.
 
 ##Current tasks
 
-You can use the tpaCurrent (or any variant version of it) to learn about the current situation of TPA deployments. An example of running a current task for the 'release' build:
+You can use the tpaInfo (or any variant version of it) to learn about the current situation of TPA deployments. An example of running a current task for the 'release' build:
 
 ```
-~/$ ./gradlew tpaCurrentRelease
-:app:tpaCurrentRelease
+~/$ gradle tpaInfoRelease
+:app:tpaInfoRelease
 Current deploy information for variant 'release':
 * Track name/applicationId: com.pepsico.pepsi.game
 * Size: 2,4 MB
@@ -171,9 +170,9 @@ To actually deploy a variant to TPA, you would use the specific tpaDeploy task.
 An example of deploying a new version of the flavor 'pepsi' and build type 'develop' would look like this:
 
 ```
-~/$ ./gradlew tpaDeployPepsiDevelop
+~/$ gradle tpaDeployPepsiDevelop
 :app:assemblePepsiDevelop
-:app:tpaCurrentPepsiDevelop
+:app:tpaInfoPepsiDevelop
 Current deploy information for variant pepsiDevelop:
 * Track name/applicationId: com.pepsico.pepsi.game.develop
 * Size: 6,7 MB
@@ -200,11 +199,11 @@ BUILD SUCCESSFUL
 ```
 
 Notice that the tpaDeployPepsiDevelop triggers the task assemblePepsiDevelop and 
-tpaCurrentPepsiDevelop to run first. This is done in order to avoid deploying an 
+tpaInfoPepsiDevelop to run first. This is done in order to avoid deploying an 
 old artifact with the *same* versionNo as the currently deployed version on the TPA server (which would generate an error after the upload anyway). So if we were to execute the tpaDeployPepsiDevelop again with no change in versionNo, the following would happen:
 
 ```
-:app:tpaCurrentPepsiDevelop
+:app:tpaInfoPepsiDevelop
 Current deploy information for variant pepsiDevelop:
 * Track name/applicationId: com.pepsico.pepsi.game.develop
 * Size: 6,8 MB

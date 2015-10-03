@@ -6,14 +6,14 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.api.GradleException
 
 /*
- * TpaCurrentTask will consult an exposed TPA webservice, download and display info 
- * about the latest deployment. TpaCurrentTask is parameterized such that a varient 
+ * TpaInfoTask will consult an exposed TPA webservice, download and display info 
+ * about the latest deployment. TpaInfoTask is parameterized such that a varient 
  * for each productFlavor and buildType is created and exposed.
  * 
  * TODO: Apache HttpClient is deprecated in Android M, so rewrite to use vanilla
  * HttpURLConnection
  */
-class TpaCurrentTask extends AbstractTpaTask {
+class TpaInfoTask extends AbstractTpaTask {
 
     @TaskAction
     void executeRequest() {
@@ -40,7 +40,7 @@ class TpaCurrentTask extends AbstractTpaTask {
                 if(currentList.empty){
                     println "Track '${applicationId}' has no previous deployments on server $project.tpa.server"
                 }else{
-                    prettyPrintTpaCurrentItem(currentList.get(0), applicationId)
+                    prettyPrintTpaInfoItem(currentList.get(0), applicationId)
                 }
                 break;
             case HttpsURLConnection.HTTP_NOT_FOUND:
@@ -52,23 +52,23 @@ class TpaCurrentTask extends AbstractTpaTask {
         connection.disconnect()
     }
     
-    def prettyPrintTpaCurrentItem(def tpaCurrentItem, def applicationId){
+    def prettyPrintTpaInfoItem(def tpaInfoItem, def applicationId){
         println "Current deploy information for variant '${variantName}':\n" +
             "* Track name/applicationId: ${applicationId}\n" +
-            "* Size: ${humanReadableByteCount(tpaCurrentItem.app_size)}\n" +
-            "* Published: $tpaCurrentItem.published\n" +
-            "* Uploaded on: ${fromISO8601(tpaCurrentItem.uploaded)}\n" +
-            "* Version code: $tpaCurrentItem.version_number\n" +
-            "* Version name: $tpaCurrentItem.version_string\n"
-        if(!tpaCurrentItem.release_notes.empty){
-            println "* Release notes: $tpaCurrentItem.release_notes"
+            "* Size: ${humanReadableByteCount(tpaInfoItem.app_size)}\n" +
+            "* Published: $tpaInfoItem.published\n" +
+            "* Uploaded on: ${fromISO8601(tpaInfoItem.uploaded)}\n" +
+            "* Version code: $tpaInfoItem.version_number\n" +
+            "* Version name: $tpaInfoItem.version_string\n"
+        if(!tpaInfoItem.release_notes.empty){
+            println "* Release notes: $tpaInfoItem.release_notes"
         }
 
-        // Store the TpaCurrentItem in the project so the later TpaDeployTask can
+        // Store the TpaInfoItem in the project so the later TpaDeployTask can
         // determine if can be skipped or not (avoid deploying versionNo
         // which already exists)
         project.ext {
-            previousTpaCurrentItem = tpaCurrentItem
+            previousTpaInfoItem = tpaInfoItem
         }
     }
 }

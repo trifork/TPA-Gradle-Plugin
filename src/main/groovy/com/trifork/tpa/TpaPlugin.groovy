@@ -1,25 +1,16 @@
 package com.trifork.tpa
 
-import com.trifork.tpa.dsl.TpaBuildType
-import com.trifork.tpa.dsl.TpaExtension
-import com.trifork.tpa.dsl.TpaProductFlavor
-import com.trifork.tpa.task.TpaDeployTask
-import com.trifork.tpa.task.TpaCurrentTask
 import org.gradle.api.*
+import com.trifork.tpa.dsl.*
+import com.trifork.tpa.task.*
 
 /**
- * The TpaPlugin generates TpaCurrentTask's and TpaDeployTask's based on the Android
+ * The TpaPlugin generates TpaInfoTask's and TpaDeployTask's based on the Android
  * plugin configuration and the TPA configuration DSL.
  * 
  * To avoid class-loading issues, it's using a minimum of dependencies and only 
  * relies on the Apache httpmime (and the httpclient-android which is already in 
  * the build-chain classpath)
- * 
- * TODO: 
- *      Legacy minify support
- *      GZip being used to optimize upload? Nope, server probably incapable!
- *      Add progress for upload
- *      Add commandline property override
  */
 class TpaPlugin implements Plugin<Project> {
     
@@ -46,10 +37,6 @@ task works in unison with Android, so please apply the 'com.android.application'
         NamedDomainObjectContainer<TpaProductFlavor> tpaProductFlavors,
         NamedDomainObjectContainer<TpaBuildType> tpaBuildTypes) {
 
-        def tpaCurrentTaskAll = project.task('tpaCurrent',
-                description: 'Fetches info about current deploy of all variants',
-                group: GRADLE_PLUGIN_GROUP) << { /* No-Op */ }
-
         // Sanity checking android.buildTypes vs. tpa.buildTypes
         project.tpa.buildTypes.all{ buildType ->
             if(!project.android.buildTypes.hasProperty(buildType.name)){
@@ -61,15 +48,13 @@ task works in unison with Android, so please apply the 'com.android.application'
         if(project.android.productFlavors.empty){
             project.android.buildTypes.all { buildType ->
         
-                def tpaCurrentTask = installTpaCurrentTask(project, buildType.name)
+                def tpaInfoTask = installTpaInfoTask(project, buildType.name)
                 def tpaDeployTask = installTpaDeployTask(project, buildType.name)
 
+                // Make sure tpaDeployTask's are only executed if it would result in a new versionCode
                 tpaDeployTask.onlyIf {
                     deployingNewVersionNo(project, getVariantName(buildType.name))
                 }
-
-                // The TpaCurrent command must contains *all* possible TpaCurrentTask variants
-                tpaCurrentTaskAll.dependsOn << tpaCurrentTask
             }
         }else{
             
@@ -78,16 +63,13 @@ task works in unison with Android, so please apply the 'com.android.application'
                     if (productFlavor.name.equals(tpaProductFlavor.name)) {
                         project.android.buildTypes.all { buildType ->
                             def variantName = getVariantName(buildType.name, productFlavor.name)
-                            def tpaCurrentTask = installTpaCurrentTask(project, buildType.name, productFlavor.name)
+                            def tpaInfoTask = installTpaInfoTask(project, buildType.name, productFlavor.name)
                             def tpaDeployTask = installTpaDeployTask(project, buildType.name, productFlavor.name)
 
-                            // Make sure tpaDeployTask's are only executed if it would result in a new versionNo
+                            // Make sure tpaDeployTask's are only executed if it would result in a new versionCode
                             tpaDeployTask.onlyIf {
                                 deployingNewVersionNo(project, variantName)
                             }
-
-                            // The TpaCurrent command must contains *all* possible TpaCurrentTask variants
-                            tpaCurrentTaskAll.dependsOn << tpaCurrentTask
                         }
                     }
                 }
@@ -95,15 +77,15 @@ task works in unison with Android, so please apply the 'com.android.application'
         }
     }
     
-    private Task installTpaCurrentTask(Project project, String buildTypeName, 
+    private Task installTpaInfoTask(Project project, String buildTypeName, 
             String productFlavorName = ''){
 
         def variantName = getVariantName(buildTypeName, productFlavorName)
         
-        project.task("tpaCurrent${capitalize(variantName)}",
+        project.task("tpaInfo${capitalize(variantName)}",
                 description: "Fetches info about latest deploy of ${buildTypeName} variant",
                 group: GRADLE_PLUGIN_GROUP,
-                type: TpaCurrentTask) {
+                type: TpaInfoTask) {
             buildType = buildTypeName
             productFlavor = productFlavorName
         }
@@ -121,7 +103,7 @@ task works in unison with Android, so please apply the 'com.android.application'
                 type: TpaDeployTask,
                 dependsOn: [\
                         "assemble${capitalizedVariantName}", \
-                        "tpaCurrent${capitalizedVariantName}"]) {
+                        "tpaInfo${capitalizedVariantName}"]) {
             buildType = buildTypeName
             productFlavor = productFlavorName
         }
@@ -130,8 +112,8 @@ task works in unison with Android, so please apply the 'com.android.application'
     private boolean deployingNewVersionNo(def project, String variantName){
         // Bug lurking: versionCodes could be defined locally per build/flavor?
         def versionCode = project.android.defaultConfig.versionCode.toInteger()
-        def skip = project.hasProperty('previousTpaCurrentItem') && 
-                project.previousTpaCurrentItem.version_number.toInteger() == versionCode
+        def skip = project.hasProperty('previousTpaInfoItem') && 
+                project.previousTpaInfoItem.version_number.toInteger() == versionCode
 
         if (skip) {
             println "VersionCode ${versionCode} of ${variantName} variant already uploaded"

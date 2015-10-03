@@ -55,7 +55,6 @@ abstract class AbstractTpaTask extends DefaultTask {
     
     String toEntityString(def response){
         StringBuilder sb = new StringBuilder()
-        
         try {
             BufferedReader reader = new BufferedReader(new InputStreamReader(response.getEntity().getContent()), 65728)
             String line = null

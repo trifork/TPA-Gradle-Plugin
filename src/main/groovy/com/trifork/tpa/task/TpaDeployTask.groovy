@@ -15,7 +15,7 @@ import org.gradle.api.tasks.TaskAction
  * TpaDeployTask depends on the assemble task, so that deployment is always done
  * on an up-to-date binary artifact. 
  * 
- * TpaDeployTask also depends on the TpaCurrentTask, such that there will be no attempt 
+ * TpaDeployTask also depends on the TpaInfoTask, such that there will be no attempt 
  * at deploying an artifact if the previously deployed versionNo is indifferent to 
  * that of the current project - this is essential in a CI/CD setup with Jenkins etc.
  * 
@@ -87,7 +87,7 @@ class TpaDeployTask extends AbstractTpaTask {
             }
         }catch(Throwable t){
             if(connection.getResponseCode() == HttpsURLConnection.HTTP_FORBIDDEN){
-                // This should never happen, as the tpaCurrent task fails first!
+                // This should never happen, as the tpaInfo task fails first!
                 try{
                     String responseBody = readBody(connection.getInputStream())
                     println "Server response: $responseBody"                        
