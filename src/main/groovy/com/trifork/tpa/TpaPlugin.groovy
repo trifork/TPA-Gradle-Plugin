@@ -69,7 +69,7 @@ class TpaPlugin implements Plugin<Project> {
                             println "Flavor: " + variantName
                             // Make sure tpaDeployTask's are only executed if it would result in a new versionCode
                             tpaDeployTask.onlyIf {
-                                deployingNewVersionNo(project, variantName)
+                                deployingNewVersionNo(project, variantName, productFlavor.name)
                             }
                         }
                     }
@@ -110,9 +110,9 @@ class TpaPlugin implements Plugin<Project> {
         }
     }
 
-    private boolean deployingNewVersionNo(def project, String variantName){
+    private boolean deployingNewVersionNo(def project, String variantName, String flavorName){
 
-        def versionCode = getVersionCode(project)
+        def versionCode = getVersionCode(project, flavorName)
         def skip = project.hasProperty('previousTpaInfoItem') && 
                 project.previousTpaInfoItem.version_number.toInteger() == versionCode
 
@@ -133,4 +133,12 @@ class TpaPlugin implements Plugin<Project> {
     public static String capitalize(String string){
         return string[0].toUpperCase() + string[1..-1]
     }
+
+    public Integer getVersionCode(def project, def productFlavor = ''){
+        if(project.android.productFlavors.empty){            
+            return project.android.defaultConfig.versionCode.toInteger()
+        }else{
+            return project.android.productFlavors[productFlavor].versionCode.toInteger()
+        }
+    }    
 }

@@ -31,8 +31,8 @@ abstract class AbstractTpaTask extends DefaultTask {
 
         variantName = TpaPlugin.getVariantName(buildType, productFlavor)
         
-        versionCode = getVersionCode(project)
-        versionName = project.android.defaultConfig.versionName
+        versionCode = getVersionCode()
+        versionName = getVersionName()
         applicationId = getApplicationId(project)
         
         if(project.tpa.server == null || project.tpa.server.trim().isEmpty()){
@@ -110,11 +110,19 @@ abstract class AbstractTpaTask extends DefaultTask {
         }
     }
     
-    public Integer getVersionCode(def project){
+    public Integer getVersionCode(){
         if(project.android.productFlavors.empty){            
             return project.android.defaultConfig.versionCode.toInteger()
         }else{
             return project.android.productFlavors[productFlavor].versionCode.toInteger()
+        }
+    }
+
+    public String getVersionName(){
+        if(project.android.productFlavors.empty){            
+            return project.android.defaultConfig.versionName
+        }else{
+            return project.android.productFlavors[productFlavor].versionName
         }
     }
     
