@@ -13,18 +13,18 @@ In order to use the plugin, all that's needed is inclusion of the dependency and
 buildscript {
     repositories {
         ...
-        maven { url "http://nexus.ci82.trifork.com/content/repositories/releases" }
+        maven { url "https://nexus.trifork.com/content/repositories/releases" }
     }
     dependencies {
         ...
-        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.65'
+        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.71’
     }
 }
 
 
 ```
 
-Always try to use the latest version published by checking the [Maven reposatory](http://nexus.ci82.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle. Last but not least, the plugin should really be pushed to a public Maven repo like [jcenter](https://bintray.com/bintray/jcenter) or [central](http://search.maven.org/).
+Always try to use the latest version published by checking the [Maven repository](https://nexus.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle.
 
 ##Simple non-flavor configuration
 
@@ -134,10 +134,14 @@ Once installed and configured, the plugin will take part of the Gradle build-cha
 ```
 The Perfect App tasks
 ---------------------
-tpaInfoDebug - Fetches info about latest deploy of debug variant
-tpaInfoRelease - Fetches info about latest deploy of release variant
-tpaDeployDebug - Deploys debug variant
-tpaDeployRelease - Deploys release variant
+tpaInfoCocacolaDebug - Fetches info about latest deploy of cocacola debug variant
+tpaInfoCocacolaRelease - Fetches info about latest deploy of cocacola release variant
+tpaDeployCocacolaDebug - Deploys cocacola debug variant
+tpaDeployCocacolaRelease - Deploys cocacola release variant
+tpaInfoPepsiDebug - Fetches info about latest deploy of pepsi debug variant
+tpaInfoPepsiRelease - Fetches info about latest deploy of pepsi release variant
+tpaDeployPepsiDebug - Deploys pepsi debug variant
+tpaDeployPepsiRelease - Deploys pepsi release variant
 
 ```
 
@@ -162,7 +166,7 @@ BUILD SUCCESSFUL
 
 ```
 
-The TPA server receives a request to return information about the track name 'com.pepsico.pepsi.game' for the project specified by the assiciated uploadUUID. It responds with key properties useful in a debugging scenario or while preparing for a deployment. 
+The TPA server receives a request to return information about the track name 'com.pepsico.pepsi.game' for the project specified by the associated uploadUUID. It responds with key properties useful in a debugging scenario or while preparing for a deployment. 
 
 ##Deploy tasks
 
