@@ -110,7 +110,7 @@ abstract class AbstractTpaTask extends DefaultTask {
         }
     }
     
-    public String getVersionCode(def project){
+    public Integer getVersionCode(def project){
         if(project.android.productFlavors.empty){            
             return project.android.defaultConfig.versionCode.toInteger()
         }else{

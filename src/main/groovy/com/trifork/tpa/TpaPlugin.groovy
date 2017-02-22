@@ -111,8 +111,8 @@ class TpaPlugin implements Plugin<Project> {
     }
 
     private boolean deployingNewVersionNo(def project, String variantName){
-        // Bug lurking: versionCodes could be defined locally per build/flavor?
-        def versionCode = project.android.defaultConfig.versionCode.toInteger()
+
+        def versionCode = getVersionCode(project)
         def skip = project.hasProperty('previousTpaInfoItem') && 
                 project.previousTpaInfoItem.version_number.toInteger() == versionCode
 
