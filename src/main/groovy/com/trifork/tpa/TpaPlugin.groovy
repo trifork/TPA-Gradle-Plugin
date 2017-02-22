@@ -7,10 +7,6 @@ import com.trifork.tpa.task.*
 /**
  * The TpaPlugin generates TpaInfoTask's and TpaDeployTask's based on the Android
  * plugin configuration and the TPA configuration DSL.
- * 
- * To avoid class-loading issues, it's using a minimum of dependencies and only 
- * relies on the Apache httpmime (and the httpclient-android which is already in 
- * the build-chain classpath)
  */
 class TpaPlugin implements Plugin<Project> {
     
@@ -19,12 +15,14 @@ class TpaPlugin implements Plugin<Project> {
     def void apply(Project project) {
 
         if(!project.plugins.hasPlugin('android')){
-            throw new GradleException("Failed to locate android plugin. The tpaDeploy \n\
-task works in unison with Android, so please apply the 'com.android.application' plugin.")
+            throw new GradleException("Failed to locate android plugin. The TPA plugin works in unison with Android, so please apply the 'com.android.application' plugin.")
         }
         
         def tpaProductFlavors = project.container(TpaProductFlavor)
         def tpaBuildTypes = project.container(TpaBuildType)
+        
+        println "tpaProductFlavors: " + tpaProductFlavors.toString();
+        println "tpaBuildTypes: " + tpaBuildTypes.toString();
         
         project.configure(project){
             extensions.create("tpa", TpaExtension, tpaProductFlavors, tpaBuildTypes)
@@ -45,7 +43,9 @@ task works in unison with Android, so please apply the 'com.android.application'
             }
         }
 
+        // If we have no product flavors defined (must be a simply non-flavor project)
         if(project.android.productFlavors.empty){
+            println "ProductFlavors NOT detected!"
             project.android.buildTypes.all { buildType ->
         
                 def tpaInfoTask = installTpaInfoTask(project, buildType.name)
@@ -57,7 +57,7 @@ task works in unison with Android, so please apply the 'com.android.application'
                 }
             }
         }else{
-            
+            println "ProductFlavors detected!"
             tpaProductFlavors.all { tpaProductFlavor ->
                 project.android.productFlavors.all { productFlavor ->
                     if (productFlavor.name.equals(tpaProductFlavor.name)) {
@@ -66,6 +66,7 @@ task works in unison with Android, so please apply the 'com.android.application'
                             def tpaInfoTask = installTpaInfoTask(project, buildType.name, productFlavor.name)
                             def tpaDeployTask = installTpaDeployTask(project, buildType.name, productFlavor.name)
 
+                            println "Flavor: " + variantName
                             // Make sure tpaDeployTask's are only executed if it would result in a new versionCode
                             tpaDeployTask.onlyIf {
                                 deployingNewVersionNo(project, variantName)

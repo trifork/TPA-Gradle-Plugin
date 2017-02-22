@@ -31,8 +31,7 @@ abstract class AbstractTpaTask extends DefaultTask {
 
         variantName = TpaPlugin.getVariantName(buildType, productFlavor)
         
-        // Bug lurking: versionCodes could be defined locally per build/flavor?
-        versionCode = project.android.defaultConfig.versionCode.toInteger()
+        versionCode = getVersionCode(project)
         versionName = project.android.defaultConfig.versionName
         applicationId = getApplicationId(project)
         
@@ -51,6 +50,11 @@ abstract class AbstractTpaTask extends DefaultTask {
                throw new GradleException("You need to specify 'tpa.productFlavors.${productFlavor}.uploadUUID'")
             }
         }
+        
+        println "versionCode:" + versionCode;
+        println "versionName:" + versionName;
+        println "applicationId:" + applicationId;
+        
     }
     
     String toEntityString(def response){
@@ -105,5 +109,14 @@ abstract class AbstractTpaTask extends DefaultTask {
             return project.android.productFlavors[productFlavor].applicationId
         }
     }
+    
+    public String getVersionCode(def project){
+        if(project.android.productFlavors.empty){            
+            return project.android.defaultConfig.versionCode.toInteger()
+        }else{
+            return project.android.productFlavors[productFlavor].versionCode.toInteger()
+        }
+    }
+    
 }    
 
