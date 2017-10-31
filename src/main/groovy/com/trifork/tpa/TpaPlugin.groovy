@@ -92,8 +92,7 @@ class TpaPlugin implements Plugin<Project> {
         }
     }
 
-    private Task installTpaDeployTask(Project project, String buildTypeName, 
-            String productFlavorName = ''){
+    private Task installTpaDeployTask(Project project, String buildTypeName, String productFlavorName = ''){
         
         def variantName = getVariantName(buildTypeName, productFlavorName)
         def capitalizedVariantName = capitalize(variantName)
@@ -110,7 +109,7 @@ class TpaPlugin implements Plugin<Project> {
         }
     }
 
-    private boolean deployingNewVersionNo(def project, String variantName, String flavorName){
+    private boolean deployingNewVersionNo(def project, String variantName, String flavorName = ''){
 
         def versionCode = getVersionCode(project, flavorName)
         def skip = project.hasProperty('previousTpaInfoItem') && 

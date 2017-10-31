@@ -10,15 +10,14 @@ import org.gradle.api.tasks.TaskAction
 
 /* 
  * TpaDeployTask will deploy an APK through an exposed TPA webservice. The task is
- * parameterized such that a varient for each productFlavor and buildType are created. 
- * 
+ * parameterized such that a variant for each productFlavor and buildType are created. 
+ * <p>
  * TpaDeployTask depends on the assemble task, so that deployment is always done
  * on an up-to-date binary artifact. 
- * 
+ * <p>
  * TpaDeployTask also depends on the TpaInfoTask, such that there will be no attempt 
  * at deploying an artifact if the previously deployed versionNo is indifferent to 
  * that of the current project - this is essential in a CI/CD setup with Jenkins etc.
- * 
  */
 class TpaDeployTask extends AbstractTpaTask {
 
@@ -121,12 +120,16 @@ class TpaDeployTask extends AbstractTpaTask {
             "* Target server: ${project.tpa.server}"
     }
     
+    // Before Gradle 4.1 this was in /app/build/outputs/apk/app_name.apk (<- missing flavor and buildtype?)
+    //  but now it can be found in /app/build/outputs/apk/[flavor]/[build]/app_name.apk
     File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
         def apkPath = "${project.buildDir}/outputs/apk"
         if(productFlavorName.empty){
-            return new File("${apkPath}/${project.name}-${buildTypeName}.apk")
+            //return new File("${apkPath}/${project.name}-${buildTypeName}.apk")
+            return new File("${apkPath}/${buildTypeName}/${project.name}-${buildTypeName}.apk")
         }
-        return new File("${apkPath}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+        //return new File("${apkPath}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+        return new File("${apkPath}/${productFlavorName}/${buildTypeName}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
     }
     
     File getProguardFile(def project, String buildTypeName, String productFlavorName = ''){
