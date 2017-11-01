@@ -18,6 +18,10 @@ import org.gradle.api.tasks.TaskAction
  * TpaDeployTask also depends on the TpaInfoTask, such that there will be no attempt 
  * at deploying an artifact if the previously deployed versionNo is indifferent to 
  * that of the current project - this is essential in a CI/CD setup with Jenkins etc.
+ * <p>
+ * The above means that the TpaDeployTask will fail (light up red if run by
+ * Jenkins) if 1) it can not be built or 2) a new version (not already uploaded) 
+ * can not be found on the.
  */
 class TpaDeployTask extends AbstractTpaTask {
 
@@ -120,16 +124,24 @@ class TpaDeployTask extends AbstractTpaTask {
             "* Target server: ${project.tpa.server}"
     }
     
-    // Before Gradle 4.1 this was in /app/build/outputs/apk/app_name.apk (<- missing flavor and buildtype?)
-    //  but now it can be found in /app/build/outputs/apk/[flavor]/[build]/app_name.apk
     File getApkFile(def project, String buildTypeName, String productFlavorName = ''){
         def apkPath = "${project.buildDir}/outputs/apk"
         if(productFlavorName.empty){
-            //return new File("${apkPath}/${project.name}-${buildTypeName}.apk")
-            return new File("${apkPath}/${buildTypeName}/${project.name}-${buildTypeName}.apk")
+            File file = new File("${apkPath}/${project.name}-${buildTypeName}.apk")
+            if(file.exists()){
+                return file;
+            }else{
+                return new File("${apkPath}/${buildTypeName}/${project.name}-${buildTypeName}.apk")
+            }
+            
         }
-        //return new File("${apkPath}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
-        return new File("${apkPath}/${productFlavorName}/${buildTypeName}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+        
+        File file = new File("${apkPath}/${project.name}-${productFlavorName}-${buildTypeName}.apk")
+            if(file.exists()){
+                return file;
+            }else{
+                return new File("${apkPath}/${productFlavorName}/${buildTypeName}/${project.name}-${productFlavorName}-${buildTypeName}.apk")        
+            }
     }
     
     File getProguardFile(def project, String buildTypeName, String productFlavorName = ''){

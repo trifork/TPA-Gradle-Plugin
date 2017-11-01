@@ -9,9 +9,6 @@ import org.gradle.api.GradleException
  * TpaInfoTask will consult an exposed TPA webservice, download and display info 
  * about the latest deployment. TpaInfoTask is parameterized such that a varient 
  * for each productFlavor and buildType is created and exposed.
- * 
- * TODO: Apache HttpClient is deprecated in Android M, so rewrite to use vanilla
- * HttpURLConnection
  */
 class TpaInfoTask extends AbstractTpaTask {
 
@@ -21,13 +18,13 @@ class TpaInfoTask extends AbstractTpaTask {
         super.executeRequest()
 
         // Extract some variables from the TPA DSL and manfest
-        String applicationId = getApplicationId(project)
-        String applicationIdSuffix = project.android.buildTypes[buildType].applicationIdSuffix ?: ''        
-        applicationId = "$applicationId$applicationIdSuffix"
-        String uri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/Android/${applicationId}/?unpublished=true&published=true&max_results=1"
+        //String applicationId = getApplicationId(project)
+        //String applicationIdSuffix = project.android.buildTypes[buildType].applicationIdSuffix ?: ''        
+        //applicationId = "$applicationId$applicationIdSuffix"
+        String infoRequestUri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/Android/${applicationId}${applicationIdSuffix}/?unpublished=true&published=true&max_results=1"
 
         // Issue HTTP GET request
-        URL url = new URL(uri);
+        URL url = new URL(infoRequestUri);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
@@ -38,13 +35,13 @@ class TpaInfoTask extends AbstractTpaTask {
             case HttpsURLConnection.HTTP_OK:
                 def currentList = new JsonSlurper().parse(connection.getInputStream())
                 if(currentList.empty){
-                    println "Track '${applicationId}' has no previous deployments on server $project.tpa.server"
+                    println "Track '${applicationId}${applicationIdSuffix}' has no previous deployments on server $project.tpa.server"
                 }else{
-                    prettyPrintTpaInfoItem(currentList.get(0), applicationId)
+                    prettyPrintTpaInfoItem(currentList.get(0), "${applicationId}${applicationIdSuffix}")
                 }
                 break;
             case HttpsURLConnection.HTTP_NOT_FOUND:
-                throw new GradleException("No track for '${applicationId}' found on server! Did you forget to add this?")
+                throw new GradleException("No track for '${applicationId}${applicationIdSuffix}' found on server! Did you forget to add this?")
             default:
                 throw new GradleException("${connection.getResponseCode()}")
         }
@@ -52,9 +49,12 @@ class TpaInfoTask extends AbstractTpaTask {
         connection.disconnect()
     }
     
-    def prettyPrintTpaInfoItem(def tpaInfoItem, def applicationId){
+    def prettyPrintTpaInfoItem(def tpaInfoItem, def applicationIdWithSuffix){
+        
+        //println(tpaInfoItem);
+        
         println "Current deploy information for variant '${variantName}':\n" +
-            "* Track name/applicationId: ${applicationId}\n" +
+            "* Track name (applicationId + suffix): ${applicationIdWithSuffix}\n" +
             "* Size: ${humanReadableByteCount(tpaInfoItem.app_size)}\n" +
             "* Published: $tpaInfoItem.published\n" +
             "* Uploaded on: ${fromISO8601(tpaInfoItem.uploaded)}\n" +

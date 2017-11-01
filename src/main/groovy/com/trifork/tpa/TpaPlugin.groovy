@@ -134,10 +134,12 @@ class TpaPlugin implements Plugin<Project> {
     }
 
     public Integer getVersionCode(def project, def productFlavor = ''){
-        if(project.android.productFlavors.empty){            
+        if(project.android.productFlavors.empty || project.android.productFlavors[productFlavor].versionCode == null){
             return project.android.defaultConfig.versionCode.toInteger()
         }else{
             return project.android.productFlavors[productFlavor].versionCode.toInteger()
         }
     }    
+    
+    
 }
