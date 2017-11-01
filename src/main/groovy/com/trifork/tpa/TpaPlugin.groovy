@@ -113,7 +113,7 @@ class TpaPlugin implements Plugin<Project> {
 
         def versionCode = getVersionCode(project, flavorName)
         def skip = project.hasProperty('previousTpaInfoItem') && 
-                project.previousTpaInfoItem.version_number.toInteger() == versionCode
+                project.previousTpaInfoItem.version_number.toInteger() >= versionCode
 
         if (skip) {
             println "VersionCode ${versionCode} of ${variantName} variant already uploaded"
