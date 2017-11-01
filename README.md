@@ -17,7 +17,7 @@ buildscript {
     }
     dependencies {
         ...
-        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.71’
+        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.88’
     }
 }
 

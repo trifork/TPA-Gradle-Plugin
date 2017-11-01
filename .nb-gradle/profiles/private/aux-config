@@ -4,13 +4,8 @@
   <auxiliary>
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
-      <group>
-        <file>file:/Users/clb-trifork/Development/tpa-gradle-plugin/src/main/groovy/com/trifork/tpa/TpaPlugin.groovy</file>
-        <file>file:/Users/clb-trifork/Development/tpa-gradle-plugin/src/main/groovy/com/trifork/tpa/task/TpaCurrentTask.groovy</file>
-        <file>file:/Users/clb-trifork/Development/tpa-gradle-plugin/build.gradle</file>
-      </group>
+      <group/>
     </open-files>
-    <editor-bookmarks lastBookmarkId="0" xmlns="http://www.netbeans.org/ns/editor-bookmarks/2"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
       <group/>
     </open-files>
