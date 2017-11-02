@@ -95,7 +95,7 @@ class TpaDeployTask extends AbstractTpaTask {
                     String responseBody = readBody(connection.getInputStream())
                     println "Server response: $responseBody"                        
                 }catch(IOException e){
-                    println "No track name matching '${applicationId}' found on the server! Did you forget to add this?"
+                    println "No track name matching '${applicationId}${applicationIdSuffix}' found on the server! Did you forget to add this?"
                 }
             }
             else{
@@ -111,7 +111,7 @@ class TpaDeployTask extends AbstractTpaTask {
     def prettyPrintDeployInfo(File apkFile, File proguardFile, boolean publish){
         println "Deploying: \n" +
             "* Build variant: ${variantName}\n" +
-            "* Track name/applicationId: ${applicationId}\n" +
+            "* Track name (applicationId + suffix): ${applicationId}${applicationIdSuffix}\n" +
             "* Version name: ${versionName}\n" +
             "* Version code: ${versionCode}\n" +
             "* APK file name: ${apkFile.getName()}\n" +
