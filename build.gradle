@@ -1,0 +1,41 @@
+/*
+ * Install to local Maven repo:
+ *  gradle install
+ *
+ *  Remember about the above, that Android Studio defines its own local MVN repo
+ *  so unless you took special action here, a gradle install won't be enough to
+ *  actually see the dependency in your local Android project)
+ *
+ * Deploy to internal Nexus:
+ *   gradle uploadArchives
+ */
+
+apply plugin: 'java'
+sourceCompatibility = JavaVersion.VERSION_1_7
+targetCompatibility = JavaVersion.VERSION_1_7
+
+apply plugin: 'groovy'
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+}
+repositories {
+    mavenCentral()
+    mavenLocal()
+}
+
+apply plugin: 'maven'
+
+group='com.trifork.tpa'
+version='1.0.90'
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: uri('uri')){
+                authentication(userName: "userName", password: "password")
+            }
+        }
+    }
+}

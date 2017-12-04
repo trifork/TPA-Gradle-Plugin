@@ -45,4 +45,3 @@ Thumbs.db
 # Netbeans IDE
 .nb-gradle-properties
 .nb-gradle/
-build.gradle
