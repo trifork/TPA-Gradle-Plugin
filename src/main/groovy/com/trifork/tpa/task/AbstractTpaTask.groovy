@@ -107,9 +107,15 @@ abstract class AbstractTpaTask extends DefaultTask {
             }
             return project.android.defaultConfig.applicationId
         }else{
+            // Null check the flavoured applicationId attribute
             def flavouredAppId = project.android.productFlavors[productFlavor].applicationId
             def defaultAppId = project.android.defaultConfig.applicationId
-            return flavouredAppId != null ? flavouredAppId : defaultAppId
+            def appId = flavouredAppId != null ? flavouredAppId : defaultAppId
+
+            // Check if the flavoured appIdSuffix is set
+            def flavouredSuffix = project.android.productFlavors[productFlavor].applicationIdSuffix
+            def appIdSuffix += flavouredSuffix != null ? flavouredSuffix : ""
+            return "$appId$appIdSuffix"
         }
     }
     
