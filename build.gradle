@@ -28,7 +28,7 @@ repositories {
 apply plugin: 'maven'
 
 group='com.trifork.tpa'
-version='1.0.90'
+version='1.0.95'
 
 uploadArchives {
     repositories {

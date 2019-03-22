@@ -17,12 +17,16 @@ buildscript {
     }
     dependencies {
         ...
-        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.88’
+        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.95’
     }
 }
 
 
 ```
+
+<aside class="notice">
+NOTICE: Be careful when adding the UUID, as TPA operates with two different ones. Also, since writing this plugin, TPA has renamed the "uploadUUID" to "API UUID". So it's the "API UUID" from the TPA website you need to use for the "uploadUUID" parameter in the scripts below!
+</aside>
 
 Always try to use the latest version published by checking the [Maven repository](https://nexus.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle.
 
