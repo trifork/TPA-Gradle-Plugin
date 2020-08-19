@@ -112,13 +112,16 @@ class TpaPlugin implements Plugin<Project> {
     private boolean deployingNewVersionNo(def project, String variantName, String flavorName = ''){
 
         def versionCode = getVersionCode(project, flavorName)
-        def skip = project.hasProperty('previousTpaInfoItem') && 
-                project.previousTpaInfoItem.version_number.toInteger() >= versionCode
+
+        /*
+        def skip = project.hasProperty('previousTpaInfoItem') && project.previousTpaInfoItem.version_number.toInteger() >= versionCode
 
         if (skip) {
             println "VersionCode ${versionCode} of ${variantName} variant already uploaded"
         }
-        !skip
+        !skip*/
+
+        true   // Always deploy new
     }
     
     public static String getVariantName(String buildTypeName, String productFlavorName = ''){

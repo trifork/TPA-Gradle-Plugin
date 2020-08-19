@@ -13,11 +13,11 @@ In order to use the plugin, all that's needed is inclusion of the dependency and
 buildscript {
     repositories {
         ...
-        maven { url "https://nexus.trifork.com/content/repositories/releases" }
+        maven { url "https://nexus3.trifork.com/repository/maven-orangutang-releases-public" }
     }
     dependencies {
         ...
-        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.0.95’
+        classpath 'com.trifork.tpa:tpa-gradle-plugin:1.1.0’
     }
 }
 
@@ -28,7 +28,7 @@ buildscript {
 NOTICE: Be careful when adding the UUID, as TPA operates with two different ones. Also, since writing this plugin, TPA has renamed the "uploadUUID" to "API UUID". So it's the "API UUID" from the TPA website you need to use for the "uploadUUID" parameter in the scripts below!
 </aside>
 
-Always try to use the latest version published by checking the [Maven repository](https://nexus.trifork.com/content/repositories/releases/com/trifork/tpa/tpa-gradle-plugin/) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle.
+Always try to use the latest version published by checking the [Maven repository](https://nexus3.trifork.com/#browse/search=keyword%3Dcom.trifork.tpa) as it will probably have bug-fixes and performance optimizations. Also note, the buildscript is often located in the parent project-wide build.gradle and not the Android app module build.gradle.
 
 ##Simple non-flavor configuration
 
@@ -203,32 +203,6 @@ OK
 
 BUILD SUCCESSFUL
 
-
-```
-
-Notice that the tpaDeployPepsiDevelop triggers the task assemblePepsiDevelop and 
-tpaInfoPepsiDevelop to run first. This is done in order to avoid deploying an 
-old artifact with the *same* versionNo as the currently deployed version on the TPA server (which would generate an error after the upload anyway). So if we were to execute the tpaDeployPepsiDevelop again with no change in versionNo, the following would happen:
-
-```
-:app:tpaInfoPepsiDevelop
-Current deploy information for variant pepsiDevelop:
-* Track name/applicationId: com.pepsico.pepsi.game.develop
-* Size: 6,8 MB
-* Published: false
-* Uploaded on: Sep 22, 2015 3:00 PM
-* VersionNo: 18
-* VersionString: 1.0-4-DEVELOP
-:app:tpaDeployPepsiDevelop
-VersionNo 18 of pepsiDevelop variant already uploaded
-:app:tpaDeployAlkaDevelop SKIPPED
-
-BUILD SUCCESSFUL
-
-
-```
-
-As you can see, the tpaDeployPepsiDevelop task is now completely skipped, since it would be rejected by the TPA server later anyway. Avoiding this failure scenario is paramount in a continuous integration setup, where you wouldn't want Jenkins to consider an up-to-date deployment, a failed job.
 
 ## Implementation notes
 

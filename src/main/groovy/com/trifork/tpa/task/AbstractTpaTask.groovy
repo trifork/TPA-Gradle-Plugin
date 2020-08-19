@@ -114,7 +114,7 @@ abstract class AbstractTpaTask extends DefaultTask {
 
             // Check if the flavoured appIdSuffix is set
             def flavouredSuffix = project.android.productFlavors[productFlavor].applicationIdSuffix
-            def appIdSuffix += flavouredSuffix != null ? flavouredSuffix : ""
+            def appIdSuffix = appIdSuffix + (flavouredSuffix != null ? flavouredSuffix : "")
             return "$appId$appIdSuffix"
         }
     }

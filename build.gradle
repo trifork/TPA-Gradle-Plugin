@@ -11,8 +11,8 @@
  */
 
 apply plugin: 'java'
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
+sourceCompatibility = JavaVersion.VERSION_1_8
+targetCompatibility = JavaVersion.VERSION_1_8
 
 apply plugin: 'groovy'
 
@@ -28,7 +28,7 @@ repositories {
 apply plugin: 'maven'
 
 group='com.trifork.tpa'
-version='1.0.95'
+version='1.1.0'
 
 uploadArchives {
     repositories {
@@ -38,4 +38,19 @@ uploadArchives {
             }
         }
     }
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
 }

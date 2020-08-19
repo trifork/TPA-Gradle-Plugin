@@ -21,7 +21,7 @@ class TpaInfoTask extends AbstractTpaTask {
         //String applicationId = getApplicationId(project)
         //String applicationIdSuffix = project.android.buildTypes[buildType].applicationIdSuffix ?: ''        
         //applicationId = "$applicationId$applicationIdSuffix"
-        String infoRequestUri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/Android/${applicationId}${applicationIdSuffix}/?unpublished=true&published=true&max_results=1"
+        String infoRequestUri = "https://${project.tpa.server}/rest/versions/${uploadUUID}/${applicationId}${applicationIdSuffix}/?unpublished=true&published=true&max_results=1"
 
         // Issue HTTP GET request
         URL url = new URL(infoRequestUri);
